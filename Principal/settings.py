@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-61xk%mo-&*77hi75k+wb74a*_095*5!gbnxqlv8n$bp4h8*5j6
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -33,6 +33,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',       
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -93,3 +95,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'cmamani096@gmail.com'      
 EMAIL_HOST_PASSWORD = 'eaet lulp ijil qidh' 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
