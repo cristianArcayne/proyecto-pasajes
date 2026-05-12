@@ -61,10 +61,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Principal.wsgi.application'
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'bd_gestion_venta_de_pasaje',
+        'USER': 'postgres',
+        'PASSWORD': '65101590',
+        'HOST': 'localhost', # O la IP de tu servidor
+        'PORT': '5432',      # Puerto por defecto de Postgres
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
