@@ -8,12 +8,16 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-61xk%mo-&*77hi75k+wb74a*_095*5!gbnxqlv8n$bp4h8*5j6'
+# ─── SEGURIDAD ────────────────────────────────────────────────────────────────
+# En Render: define SECRET_KEY como variable de entorno
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-cambiar-esto-en-produccion')
 
-DEBUG = True
+# En Render: define DEBUG=False como variable de entorno
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']  # Render maneja esto con su proxy
 
+# ─── APPS ─────────────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -27,16 +31,16 @@ INSTALLED_APPS = [
     'Usuarios',
 ]
 
+# ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',                         
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',   # después de SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',       
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -60,17 +64,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Principal.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bd_gestion_venta_de_pasaje',
-        'USER': 'postgres',
-        'PASSWORD': '65101590',
-        'HOST': 'localhost', # O la IP de tu servidor
-        'PORT': '5432',      # Puerto por defecto de Postgres
-    }
-}
+# ─── BASE DE DATOS ────────────────────────────────────────────────────────────
+# Render inyecta DATABASE_URL automáticamente cuando vinculas el servicio de PostgreSQL
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
+if DATABASE_URL:
+    # Producción: usa la URL de Render
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    # Desarrollo local: usa tu PostgreSQL local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'bd_gestion_venta_de_pasaje'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
+
+# ─── VALIDACIÓN DE CONTRASEÑAS ────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -78,25 +98,31 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+# ─── INTERNACIONALIZACIÓN ─────────────────────────────────────────────────────
+LANGUAGE_CODE = 'es-bo'
+TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# ─── ARCHIVOS ESTÁTICOS (WhiteNoise) ─────────────────────────────────────────
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# ─── DRF + JWT ────────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
+
+# ─── EMAIL ────────────────────────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'cmamani096@gmail.com'      
-EMAIL_HOST_PASSWORD = 'eaet lulp ijil qidh' 
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-import os
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
