@@ -1086,7 +1086,7 @@ const FormularioCompra = () => {
 
 const styles = {
   container: { padding: "20px 10px", maxWidth: "600px", margin: "0 auto", fontFamily: "Arial, sans-serif" },
-  headerNav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  headerNav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: '8px' },
   btnBack: { border: 'none', background: '#f0ebff', color: '#502bc0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' },
   btnRecuperarNav: { border: 'none', background: '#e2e8f0', color: '#475569', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' },
   card: { backgroundColor: "white", padding: "25px 20px", borderRadius: "12px", boxShadow: "0 4px 16px rgba(0,0,0,0.06)" },
@@ -1157,7 +1157,7 @@ const styles = {
   passNotchRight: { position: 'absolute', right: -10, width: 20, height: 20, borderRadius: '50%', background: '#f4f6f8', borderLeft: '1px solid #e2e8f0' },
   passDashedLine: { borderTop: '2px dashed #cbd5e1', width: '100%', margin: '0 10px' },
   
-  passFooter: { padding: '16px 24px 20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  passFooter: { padding: '16px 24px 20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' },
   passPrice: { display: 'block', fontSize: 20, color: '#16a34a', fontWeight: 'bold' },
   
   barcodeArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fafbfc', padding: '16px 0', borderTop: '1px solid #f1f5f9' },
