@@ -32,6 +32,9 @@ def get_ip(request):
 
 
 def registrar_bitacora(usuario, accion, modulo, descripcion='', request=None):
+    # Omitir el registro de acciones pasivas de visualización ('ver')
+    if accion == 'ver':
+        return
     ip = get_ip(request) if request else ''
     Bitacora.objects.create(
         usuario=usuario,

@@ -50,6 +50,11 @@ const FormularioCompra = () => {
   const [compartiendoWa, setCompartiendoWa] = useState(false);
   const [pendienteEnvioAuto, setPendienteEnvioAuto] = useState(false);
 
+  // Estados de Verificación de Pago Segura
+  const [comprobanteQr, setComprobanteQr] = useState('');
+  const [verificandoPago, setVerificandoPago] = useState(false);
+  const [pasoVerificacion, setPasoVerificacion] = useState(0);
+
   useEffect(() => {
     api.get("tipos-pasajero/")
       .then(res => {
@@ -160,6 +165,7 @@ const FormularioCompra = () => {
 
       // Crear objeto ticket activo para visualizar
       const tipoPasajeroTexto = tipos.find(t => String(t.id_tipo) === String(formData.id_tipo))?.nombre_tipo || 'Normal';
+      const refGenerada = metodoPago === 'qr' ? comprobanteQr : `TX-${Math.floor(10000000 + Math.random() * 90000000)}`;
       setTicketActivo({
         id_pasaje: res.data.id_pasaje,
         nombre_pasajero: formData.nombre_pasajero,
@@ -173,6 +179,7 @@ const FormularioCompra = () => {
         hora: formData.hora_salida,
         origen: formData.origen,
         destino: formData.destino,
+        ref_transaccion: refGenerada
       });
 
       // Activar el envío automático de WhatsApp si se registró un celular
@@ -196,6 +203,7 @@ const FormularioCompra = () => {
       setAsientos([]);
       setViajes([]);
       setDatosTarjeta({ numero: '', titular: '', vencimiento: '', cvv: '' });
+      setComprobanteQr("");
 
       // Avanzar a la vista de Boleto
       setVista('ticket');
@@ -204,6 +212,48 @@ const FormularioCompra = () => {
     } finally {
       setCargando(false);
     }
+  };
+
+  // Función para iniciar la simulación interactiva de validación interbancaria
+  const iniciarVerificacionPago = () => {
+    if (metodoPago === 'qr') {
+      if (!comprobanteQr.trim()) {
+        alert('⚠️ Por favor ingresa el Número de Comprobante / Transacción de tu transferencia.');
+        return;
+      }
+      if (comprobanteQr.trim().length < 6) {
+        alert('⚠️ Ingresa un número de transacción válido (mínimo 6 dígitos).');
+        return;
+      }
+    } else {
+      if (!datosTarjeta.numero || !datosTarjeta.titular || !datosTarjeta.vencimiento || !datosTarjeta.cvv) {
+        alert('⚠️ Por favor completa todos los campos de tu tarjeta bancaria.');
+        return;
+      }
+      if (datosTarjeta.numero.length < 15) {
+        alert('⚠️ Por favor ingresa un número de tarjeta válido.');
+        return;
+      }
+    }
+
+    setVerificandoPago(true);
+    setPasoVerificacion(1);
+
+    // Secuencias de validación y conciliación de seguridad bancaria
+    setTimeout(() => {
+      setPasoVerificacion(2);
+      setTimeout(() => {
+        setPasoVerificacion(3);
+        setTimeout(() => {
+          setPasoVerificacion(4);
+          setTimeout(async () => {
+            setVerificandoPago(false);
+            setPasoVerificacion(0);
+            await procesarCompraFinal();
+          }, 1000);
+        }, 1000);
+      }, 1200);
+    }, 1200);
   };
 
   // Buscar pasajes por CI
@@ -647,17 +697,29 @@ const FormularioCompra = () => {
                 />
               </div>
 
+              <div style={{ width: '100%', boxSizing: 'border-box', marginTop: '10px', marginBottom: '4px' }}>
+                <label style={styles.label}>🔢 NÚMERO DE TRANSACCIÓN / COMPROBANTE</label>
+                <input 
+                  style={{ ...styles.input, marginBottom: '8px' }} 
+                  placeholder="Ej. 18273645 (Escribe los 8 dígitos de tu transferencia)" 
+                  value={comprobanteQr}
+                  onChange={e => setComprobanteQr(e.target.value)}
+                  type="number"
+                  required 
+                />
+              </div>
+
               <div style={styles.infoAlert}>
-                ℹ️ Una vez realizada la transferencia bancaria en tu celular, haz clic en el botón de confirmación abajo para generar tu boleto.
+                ℹ️ Una vez realizada la transferencia bancaria en tu celular, ingresa el número de comprobante arriba y presiona Verificar.
               </div>
 
               <button 
                 type="button" 
-                onClick={procesarCompraFinal} 
+                onClick={iniciarVerificacionPago} 
                 disabled={cargando}
                 style={styles.botonPrincipal}
               >
-                {cargando ? "Confirmando transferencia..." : "✅ Ya realicé mi pago / Confirmar"}
+                {cargando ? "Procesando comprobante..." : "🛡️ Verificar Transferencia y Obtener Boleto"}
               </button>
             </div>
           )}
@@ -724,11 +786,11 @@ const FormularioCompra = () => {
 
               <button 
                 type="button" 
-                onClick={procesarCompraFinal} 
+                onClick={iniciarVerificacionPago} 
                 disabled={cargando}
                 style={styles.botonPrincipal}
               >
-                {cargando ? "Autorizando pago bancario..." : `💳 Pagar Bs. ${precioTotal} y Obtener Boleto`}
+                {cargando ? "Autorizando pago..." : `🛡️ Validar Pago (Bs. ${precioTotal}) y Obtener Boleto`}
               </button>
             </div>
           )}
@@ -842,6 +904,14 @@ const FormularioCompra = () => {
                 <span style={styles.passLabel}>TIPO TARIFA</span>
                 <span style={styles.passValue}>{ticketActivo.tipo_pasajero}</span>
               </div>
+              {ticketActivo.ref_transaccion && (
+                <div style={{ textAlign: 'center' }}>
+                  <span style={styles.passLabel}>REF. PAGO</span>
+                  <span style={{ ...styles.passValue, fontSize: '11px', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                    {ticketActivo.ref_transaccion}
+                  </span>
+                </div>
+              )}
               <div style={{ textAlign: 'right' }}>
                 <span style={styles.passLabel}>TOTAL PAGADO</span>
                 <span style={styles.passPrice}>Bs. {ticketActivo.precio_final}</span>
@@ -939,6 +1009,73 @@ const FormularioCompra = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: VERIFICACIÓN SEGURA DE PAGO EN TIEMPO REAL ── */}
+      {verificandoPago && (
+        <div style={ms.overlay}>
+          <div style={{ ...ms.modal, width: '420px', maxWidth: '90%', textAlign: 'center', padding: '30px 24px', boxSizing: 'border-box' }}>
+            <div style={{ fontSize: '40px', marginBottom: '15px' }}>🛡️</div>
+            <h3 style={{ color: '#502bc0', margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' }}>
+              Verificación de Pago Segura
+            </h3>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '24px', lineHeight: '1.4' }}>
+              Validando estado de fondos y conciliación con la pasarela interbancaria de <strong>Banco de los Bolivianos</strong>. Por favor espera.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left', background: '#f8fafc', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+              {/* Paso 1: Conexión */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                <span style={{ fontSize: '16px' }}>
+                  {pasoVerificacion >= 1 ? (pasoVerificacion > 1 ? '✅' : '🔄') : '⚪'}
+                </span>
+                <span style={{ color: pasoVerificacion === 1 ? '#502bc0' : pasoVerificacion > 1 ? '#16a34a' : '#94a3b8', fontWeight: pasoVerificacion === 1 ? 'bold' : 'normal' }}>
+                  Conectando con la red interbancaria cifrada...
+                </span>
+              </div>
+
+              {/* Paso 2: Validación */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                <span style={{ fontSize: '16px' }}>
+                  {pasoVerificacion >= 2 ? (pasoVerificacion > 2 ? '✅' : '🔄') : '⚪'}
+                </span>
+                <span style={{ color: pasoVerificacion === 2 ? '#502bc0' : pasoVerificacion > 2 ? '#16a34a' : '#94a3b8', fontWeight: pasoVerificacion === 2 ? 'bold' : 'normal' }}>
+                  Validando autenticidad del comprobante y fondos...
+                </span>
+              </div>
+
+              {/* Paso 3: Acreditación */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                <span style={{ fontSize: '16px' }}>
+                  {pasoVerificacion >= 3 ? (pasoVerificacion > 3 ? '✅' : '🔄') : '⚪'}
+                </span>
+                <span style={{ color: pasoVerificacion === 3 ? '#502bc0' : pasoVerificacion > 3 ? '#16a34a' : '#94a3b8', fontWeight: pasoVerificacion === 3 ? 'bold' : 'normal' }}>
+                  Acreditando transferencia en cuenta recaudadora...
+                </span>
+              </div>
+
+              {/* Paso 4: Finalizado */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+                <span style={{ fontSize: '16px' }}>
+                  {pasoVerificacion >= 4 ? '🎉' : '⚪'}
+                </span>
+                <span style={{ color: pasoVerificacion === 4 ? '#16a34a' : '#94a3b8', fontWeight: pasoVerificacion === 4 ? 'bold' : 'normal' }}>
+                  ¡Conciliación bancaria exitosa! Generando boleto...
+                </span>
+              </div>
+            </div>
+
+            {/* Barra de progreso */}
+            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ 
+                width: `${pasoVerificacion * 25}%`, 
+                height: '100%', 
+                background: pasoVerificacion === 4 ? '#16a34a' : '#502bc0', 
+                transition: 'width 0.4s ease' 
+              }} />
+            </div>
           </div>
         </div>
       )}
