@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './AuthContext'; // Asegúrate de haber creado este archivo
 import LoginAdmin from './login'; 
-import FormularioCompra from './usuario_venta_pasaje';
+import FormularioCompra from './VentaPasaje';
 import PanelAdmin from './PanelAdmin';
 import ResetPassword from './ResetPassword';
 
