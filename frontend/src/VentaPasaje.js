@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import api from "./api";
 import MapaAsientos from "./componentes/MapaAsientos";
 import TarjetaEmbarque from "./componentes/TarjetaEmbarque";
-import CargadorVerificacion from "./componentes/CargadorVerificacion";
 import RecuperacionBoleto from "./componentes/RecuperacionBoleto";
 
 const PAYPAL_CLIENT_ID = "AcleKNQVglnBKLbtVqxM7CloDFHlbKJkUDNtlV0SDt_Wm5iPFaBnB5V76C6GYu3_4G__bu3pNLtlD8bw"; 
@@ -51,9 +50,7 @@ const FormularioCompra = () => {
   const [compartiendoWa, setCompartiendoWa] = useState(false);
   const [pendienteEnvioAuto, setPendienteEnvioAuto] = useState(false);
 
-  // Estados de verificacion de pago
-  const [verificandoPago, setVerificandoPago] = useState(false);
-  const [pasoVerificacion, setPasoVerificacion] = useState(0);
+
 
   // Estados de PayPal
   const [paypalLoaded, setPaypalLoaded] = useState(false);
@@ -148,24 +145,10 @@ const FormularioCompra = () => {
         onApprove: async (data, actions) => {
           return actions.order.capture().then(async (details) => {
             const orderId = details.id;
-            
-            setVerificandoPago(true);
-            setPasoVerificacion(1);
-
-            setTimeout(() => {
-              setPasoVerificacion(2);
-              setTimeout(() => {
-                setPasoVerificacion(3);
-                setTimeout(() => {
-                  setPasoVerificacion(4);
-                  setTimeout(async () => {
-                    setVerificandoPago(false);
-                    setPasoVerificacion(0);
-                    await procesarCompraFinal(orderId);
-                  }, 1000);
-                }, 1000);
-              }, 1200);
-            }, 1200);
+            setCargando(true);
+            setTimeout(async () => {
+              await procesarCompraFinal(orderId);
+            }, 3000);
           });
         },
         onError: (err) => {
@@ -288,7 +271,7 @@ const FormularioCompra = () => {
     }
   };
 
-  // Simular validacion interbancaria
+  // Simular validacion con retraso
   const iniciarVerificacionPago = () => {
     if (metodoPago === 'tarjeta') {
       if (!datosTarjeta.numero || !datosTarjeta.titular || !datosTarjeta.vencimiento || !datosTarjeta.cvv) {
@@ -301,23 +284,10 @@ const FormularioCompra = () => {
       }
     }
 
-    setVerificandoPago(true);
-    setPasoVerificacion(1);
-
-    setTimeout(() => {
-      setPasoVerificacion(2);
-      setTimeout(() => {
-        setPasoVerificacion(3);
-        setTimeout(() => {
-          setPasoVerificacion(4);
-          setTimeout(async () => {
-            setVerificandoPago(false);
-            setPasoVerificacion(0);
-            await procesarCompraFinal();
-          }, 2000);
-        }, 2200);
-      }, 2500);
-    }, 2500);
+    setCargando(true);
+    setTimeout(async () => {
+      await procesarCompraFinal();
+    }, 3000);
   };
 
   const iniciarEnvioWhatsapp = async () => {
@@ -881,11 +851,7 @@ const FormularioCompra = () => {
         </div>
       )}
 
-      <CargadorVerificacion 
-        verificandoPago={verificandoPago} 
-        pasoVerificacion={pasoVerificacion} 
-        ms={ms} 
-      />
+
 
     </div>
   );
