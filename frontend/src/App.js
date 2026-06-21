@@ -1,24 +1,23 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { AuthProvider } from './AuthContext'; // Asegúrate de haber creado este archivo
-import LoginAdmin from './login'; 
-import FormularioCompra from './VentaPasaje';
-import PanelAdmin from './PanelAdmin';
-import ResetPassword from './ResetPassword';
+import { AuthProvider } from './core/context/AuthContext';
+import LoginAdmin from './modules/seguridad/ui/FormularioLogin'; 
+import FormularioCompra from './modules/ventas/ui/FormularioVentaUI';
+import PanelAdmin from './modules/seguridad/ui/MenuPrincipal';
+import ResetPassword from './modules/seguridad/ui/FormularioRecuperacion';
 
 const SeleccionarPerfil = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '100px', fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ color: '#502bc0', fontSize: '3rem' }}>Venta de Pasajes</h1>
-      <h2 style={{ color: '#2980B9' }}>Elige tu tipo de cuenta</h2>
+    <div className="perfil-container">
+      <h1 className="perfil-titulo">Venta de Pasajes</h1>
+      <h2 className="perfil-subtitulo">Elige tu tipo de cuenta</h2>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '50px' }}>
+      <div className="perfil-cards">
         
         {/* PASAJERO */}
         <div 
-          className="tarjeta-perfil" 
-          style={styles.card} 
+          className="perfil-card" 
           onClick={() => navigate('/registro-compra')}
         >
           <div style={{ fontSize: '100px' }}>👤</div>
@@ -27,8 +26,7 @@ const SeleccionarPerfil = () => {
 
         {/* ADMINISTRADOR */}
         <div 
-          className="tarjeta-perfil" 
-          style={styles.card} 
+          className="perfil-card" 
           onClick={() => navigate('/login-admin')}
         >
           <div style={{ fontSize: '100px' }}>💻</div>
@@ -38,19 +36,6 @@ const SeleccionarPerfil = () => {
       </div>
     </div>
   );
-};
-
-// Estilos básicos para las tarjetas
-const styles = {
-  card: {
-    cursor: 'pointer',
-    padding: '20px',
-    borderRadius: '15px',
-    border: '1px solid #ddd',
-    transition: 'transform 0.2s',
-    backgroundColor: '#f9f9f9',
-    width: '200px'
-  }
 };
 
 function App() {

@@ -16,7 +16,7 @@ if env_file.exists():
             line = line.strip()
             if line and not line.startswith('#') and '=' in line:
                 key, val = line.split('=', 1)
-                os.environ.setdefault(key.strip(), val.strip())
+                os.environ[key.strip()] = val.strip()
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-61xk%mo-&*77hi75k+wb74a*_095*5!gbnxqlv8n$bp4h8*5j6')
 
@@ -34,9 +34,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'venta',
-    'logica',
-    'seguridad',
+    'apps.seguridad',
+    'apps.logistica',
+    'apps.ventas',
+    'apps.encomiendas',
+    'apps.reportes',
 ]
 
 MIDDLEWARE = [
