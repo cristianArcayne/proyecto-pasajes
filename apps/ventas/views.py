@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 
-from .models import Cliente, Pasaje, DetalleVenta, TipoPasajero
+from .models import Cliente, Pasaje, DetalleVenta, TipoPasajero, Factura
 from .serializers import ClienteSerializer, PasajeSerializer, DetalleVentaSerializer
 
 # Depende de logística para obtener viajes/rutas y de seguridad para bitácoras/permisos
@@ -113,8 +113,51 @@ class VentaViewSet(viewsets.ViewSet):
         except TipoPasajero.DoesNotExist:
             return Response({"mensaje": f"Tipo de pasajero {id_tipo} no existe"}, status=400)
             
-        precio_final = ruta.precio_ruta
+        requiere_factura = data.get("requiere_factura", False)
+        nro_factura = None
+
         try:
+            detalle = None
+            if requiere_factura:
+                import random
+                import datetime
+                from apps.logistica.models import Pasajero
+                
+                # 1. Asegurar la existencia del cliente (Pasajero)
+                cliente_obj, _ = Pasajero.objects.get_or_create(
+                    ci=ci_pasajero,
+                    defaults={
+                        "nombre": nombre_pasajero,
+                        "telefono": str(telefono_pasajero or "0"),
+                        "comentario": "Registrado al emitir factura"
+                    }
+                )
+
+                # 2. Crear Factura
+                nro_factura = random.randint(100000, 999999)
+                while Factura.objects.filter(nr_factura=nro_factura).exists():
+                    nro_factura = random.randint(100000, 999999)
+
+                factura = Factura.objects.create(
+                    nr_factura=nro_factura,
+                    fecha_emision=datetime.date.today(),
+                    total_factura=precio_final,
+                    ci_cliente=cliente_obj
+                )
+
+                # 3. Crear DetalleVenta
+                id_detalle = random.randint(100000, 999999)
+                while DetalleVenta.objects.filter(id_detalle_venta=id_detalle).exists():
+                    id_detalle = random.randint(100000, 999999)
+
+                detalle = DetalleVenta.objects.create(
+                    id_detalle_venta=id_detalle,
+                    nr_factura=factura,
+                    cantidad=1,
+                    subtotal=precio_final
+                )
+
+            # 4. Crear Pasaje
             ultimo = Pasaje.objects.order_by("-id_pasaje").first()
             nuevo_id = (ultimo.id_pasaje + 1) if ultimo else 1
             
@@ -122,7 +165,8 @@ class VentaViewSet(viewsets.ViewSet):
                 id_pasaje=nuevo_id, precio_final=precio_final, estado_pasaje="VENDIDO",
                 nombre_pasajero=nombre_pasajero, ci_pasajero=ci_pasajero,
                 telefono_pasajero=telefono_pasajero, id_tipo=tipo, id_viaje=viaje,
-                nro_asiento=nro_asiento, placa_bus=placa_str
+                nro_asiento=nro_asiento, placa_bus=placa_str,
+                id_detalle_venta=detalle
             )
             
             # Llamada al método confirmarPago del ViewSet
@@ -131,7 +175,13 @@ class VentaViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"mensaje": f"Error al guardar: {str(e)}"}, status=500)
             
-        return Response({"mensaje": "OK", "id_pasaje": pasaje.id_pasaje, "asiento": nro_asiento, "precio": precio_final}, status=201)
+        return Response({
+            "mensaje": "OK", 
+            "id_pasaje": pasaje.id_pasaje, 
+            "asiento": nro_asiento, 
+            "precio": precio_final,
+            "nro_factura": nro_factura
+        }, status=201)
 
     def confirmarPago(self, pasaje_id):
         # Actualización o auditoría final del cobro

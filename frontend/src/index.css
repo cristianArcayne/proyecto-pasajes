@@ -200,3 +200,48 @@ code {
   }
 }
 
+/* --- PRINT RULES TO EXPORT ONLY REPORT CONTENT --- */
+@media print {
+  body {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+  
+  /* Hide navbar, sidebar, buttons, and filters */
+  .dashboard-navbar,
+  .dashboard-sidebar,
+  .no-print,
+  .sidebar-overlay,
+  .headerNav,
+  button,
+  input,
+  select {
+    display: none !important;
+  }
+  
+  /* Make content fill full page width and height */
+  .dashboard-layout {
+    height: auto !important;
+    display: block !important;
+  }
+  .dashboard-main {
+    display: block !important;
+    overflow: visible !important;
+  }
+  .dashboard-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  .printable-report {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  .printable-report h2, .printable-report h3 {
+    color: #000 !important;
+  }
+}
+

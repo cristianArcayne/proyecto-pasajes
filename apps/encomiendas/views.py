@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from .models import Encomienda, Tipo_Encomienda
 from .serializers import EncomiendaSerializer
 
-from apps.seguridad.views import registrar_bitacora
+from apps.seguridad.views import registrar_bitacora, verificar_permiso
 
 class RegistroEncomiendaViewSet(viewsets.ModelViewSet):
     queryset = Encomienda.objects.all()
@@ -15,6 +15,8 @@ class RegistroEncomiendaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        if not verificar_permiso(request.user, 'encomiendas', 'crear'):
+            return Response({"mensaje": "Sin permiso para registrar encomiendas."}, status=403)
         # Lógica de cálculo y guía
         peso_kg = request.data.get("peso_kg")
         tipo_base_id = request.data.get("id_encomienda")
@@ -55,10 +57,14 @@ class RegistroEncomiendaViewSet(viewsets.ModelViewSet):
 
 class GestionEncomiendaViewSet(RegistroEncomiendaViewSet):
     def list(self, request, *args, **kwargs):
+        if not verificar_permiso(request.user, 'encomiendas', 'ver'):
+            return Response({"mensaje": "Sin permiso para ver encomiendas."}, status=403)
         registrar_bitacora(request.user.username, 'ver', 'encomiendas', 'Listó encomiendas', request)
         return super().list(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
+        if not verificar_permiso(request.user, 'encomiendas', 'eliminar'):
+            return Response({"mensaje": "Sin permiso para eliminar encomiendas."}, status=403)
         nro = kwargs.get("pk")
         registrar_bitacora(request.user.username, 'eliminar', 'encomiendas', f'Anuló encomienda Guía={nro}', request)
         return super().destroy(request, *args, **kwargs)

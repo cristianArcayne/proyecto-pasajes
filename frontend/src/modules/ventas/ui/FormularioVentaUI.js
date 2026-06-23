@@ -216,6 +216,19 @@ const FormularioVentaUI = () => {
                   ))}
                 </select>
               </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px" }}>
+                <input
+                  type="checkbox"
+                  id="requiere_factura"
+                  checked={formData.requiere_factura || false}
+                  onChange={(e) => setFormData({ ...formData, requiere_factura: e.target.checked })}
+                  style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                />
+                <label htmlFor="requiere_factura" style={{ fontSize: "13px", fontWeight: "bold", color: "#475569", cursor: "pointer" }}>
+                  ¿Requiere Factura? (Se registrará y vinculará al boleto)
+                </label>
+              </div>
             </fieldset>
 
             {/* Datos del Viaje */}

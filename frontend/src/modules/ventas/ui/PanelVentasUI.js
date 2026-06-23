@@ -227,7 +227,7 @@ const PanelVentasUI = () => {
               </h3>
 
               <div>
-                <label style={ms.label}>C.I. CLIENTE (BUSCADOR AUTOMÁTICO)</label>
+                <label style={ms.label}>C.I. CLIENTE</label>
                 <input
                   style={ms.input}
                   placeholder="C.I. Pasajero"

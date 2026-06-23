@@ -6,6 +6,13 @@ export class DatosConsolidados {
     ingresosEncomiendas = 0,
     rutaMasFrecuentada = "N/A",
     busMasUtilizado = "N/A",
+    totalBuses = 0,
+    busesActivos = 0,
+    pasajeroFrecuente = "N/A",
+    clientesList = [],
+    choferesList = [],
+    viajesList = [],
+    busesList = []
   }) {
     this.totalPasajesVendidos = totalPasajesVendidos;
     this.ingresosPasajes = ingresosPasajes;
@@ -13,6 +20,13 @@ export class DatosConsolidados {
     this.ingresosEncomiendas = ingresosEncomiendas;
     this.rutaMasFrecuentada = rutaMasFrecuentada;
     this.busMasUtilizado = busMasUtilizado;
+    this.totalBuses = totalBuses;
+    this.busesActivos = busesActivos;
+    this.pasajeroFrecuente = pasajeroFrecuente;
+    this.clientesList = clientesList;
+    this.choferesList = choferesList;
+    this.viajesList = viajesList;
+    this.busesList = busesList;
   }
 
   get ingresosTotales() {

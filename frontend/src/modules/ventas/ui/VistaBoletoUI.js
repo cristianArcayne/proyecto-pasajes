@@ -98,7 +98,14 @@ const VistaBoletoUI = ({ ticketActivo, styles }) => {
           <span style={styles.passLabel}>TIPO TARIFA</span>
           <span style={styles.passValue}>{ticketActivo.tipo_pasajero}</span>
         </div>
-        {ticketActivo.ref_transaccion && (
+        {ticketActivo.nro_factura ? (
+          <div style={{ textAlign: "center", background: "#f0fdf4", border: "1px dashed #22c55e", padding: "4px 8px", borderRadius: 4 }}>
+            <span style={{ ...styles.passLabel, color: "#16a34a", fontSize: "9px" }}>📄 FACTURA EMITIDA</span>
+            <span style={{ ...styles.passValue, fontSize: "12px", color: "#15803d", fontWeight: "bold" }}>
+              Nro: #{ticketActivo.nro_factura}
+            </span>
+          </div>
+        ) : ticketActivo.ref_transaccion && (
           <div style={{ textAlign: "center" }}>
             <span style={styles.passLabel}>REF. PAGO</span>
             <span
@@ -129,6 +136,7 @@ const VistaBoletoUI = ({ ticketActivo, styles }) => {
               `🗺️ RUTA: ${ticketActivo.origen} a ${ticketActivo.destino}\n` +
               `📅 FECHA: ${ticketActivo.fecha} | ${ticketActivo.hora}\n` +
               `💵 MONTO: Bs. ${ticketActivo.precio_final}\n` +
+              (ticketActivo.nro_factura ? `📄 FACTURA: #${ticketActivo.nro_factura}\n` : "") +
               `🛡️ REF PAGO: ${ticketActivo.ref_transaccion || "EFECTIVO"}`
           )}`}
           alt="Código QR de Validación de Embarque"

@@ -19,6 +19,8 @@ class ConductorSerializer(serializers.ModelSerializer):
 class HorarioSerializer(serializers.ModelSerializer):
     fecha  = serializers.DateField()
     hora   = serializers.TimeField()
+    origen = serializers.CharField(source='id_ruta.origen', read_only=True)
+    destino = serializers.CharField(source='id_ruta.destino', read_only=True)
     class Meta:
         model = Horario
         fields = "__all__"

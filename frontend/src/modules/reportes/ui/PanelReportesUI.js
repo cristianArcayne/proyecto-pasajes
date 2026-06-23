@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useReportesController } from "../controllers/ReportesController";
 import { GeneradorPDF } from "../../../shared/utils/GeneradorPDF";
 
@@ -128,8 +128,10 @@ const styles = {
 };
 
 const PanelReportesUI = () => {
-  const { cargando, filtros, setFiltros, datos, generarReporte } =
+  const { cargando, filtros, setFiltros, datos, generarReporte, pasajesList } =
     useReportesController();
+
+  const [placaSeleccionada, setPlacaSeleccionada] = useState("");
 
   useEffect(() => {
     generarReporte();
@@ -203,6 +205,12 @@ const PanelReportesUI = () => {
             {datos.ingresosEncomiendas.toFixed(2)} Bs
           </span>
         </div>
+        <div style={styles.statCard}>
+          <span style={styles.statLabel}>🚌 Flota de Buses</span>
+          <span style={styles.statVal}>
+            {datos.busesActivos} <span style={{ fontSize: 16, color: "#64748b" }}>/ {datos.totalBuses} Activos</span>
+          </span>
+        </div>
       </div>
 
       <div style={styles.chartSection}>
@@ -222,11 +230,142 @@ const PanelReportesUI = () => {
           <span style={styles.rowValue}>{datos.busMasUtilizado}</span>
         </div>
         <div style={styles.rowItem}>
+          <span style={styles.rowLabel}>Pasajero más Frecuente</span>
+          <span style={{ ...styles.rowValue, color: "#502bc0" }}>{datos.pasajeroFrecuente}</span>
+        </div>
+        <div style={styles.rowItem}>
           <span style={styles.rowLabel}>Fecha del Reporte</span>
           <span style={styles.rowValue}>
             {new Date().toLocaleDateString("es-BO")}
           </span>
         </div>
+      </div>
+
+      {/* 1. Pasajeros por Flota (Bus) */}
+      <div style={{ ...styles.chartSection, marginTop: 24 }}>
+        <h3 style={styles.sectionTitle}>🚌 Pasajeros Registrados por Bus (Flota)</h3>
+        <div style={{ marginBottom: 16 }} className="no-print">
+          <label style={styles.label}>Selecciona un Bus de la Flota: </label>
+          <select
+            value={placaSeleccionada}
+            onChange={(e) => setPlacaSeleccionada(e.target.value)}
+            style={{ ...styles.input, marginLeft: 10 }}
+          >
+            <option value="">-- Seleccione Bus --</option>
+            {datos.busesList && datos.busesList.map((b) => (
+              <option key={b.placa} value={b.placa}>
+                {b.placa} - {b.modelo}
+              </option>
+            ))}
+          </select>
+        </div>
+        {placaSeleccionada && (
+          <div>
+            <h4 style={{ fontSize: 14, color: "#502bc0", marginBottom: 12 }}>
+              Pasajeros que abordaron el Bus: <strong>{placaSeleccionada}</strong>
+            </h4>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1" }}>
+                  <th style={{ textAlign: "left", padding: 8 }}>Pasajero</th>
+                  <th style={{ textAlign: "left", padding: 8 }}>C.I.</th>
+                  <th style={{ textAlign: "left", padding: 8 }}>Celular</th>
+                  <th style={{ textAlign: "center", padding: 8 }}>Asiento</th>
+                  <th style={{ textAlign: "left", padding: 8 }}>Ruta</th>
+                  <th style={{ textAlign: "left", padding: 8 }}>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pasajesList.filter(p => p.placa_bus === placaSeleccionada).length > 0 ? (
+                  pasajesList.filter(p => p.placa_bus === placaSeleccionada).map((p, idx) => (
+                    <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                      <td style={{ padding: 8 }}>{p.nombre_pasajero}</td>
+                      <td style={{ padding: 8 }}>{p.ci_pasajero}</td>
+                      <td style={{ padding: 8 }}>{p.telefono_pasajero || "N/A"}</td>
+                      <td style={{ padding: 8, textAlign: "center", fontWeight: "bold", color: "#502bc0" }}>#{p.nro_asiento}</td>
+                      <td style={{ padding: 8 }}>{p.origen} ➔ {p.destino}</td>
+                      <td style={{ padding: 8 }}>{p.fecha_viaje}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" style={{ padding: 12, textAlign: "center", color: "#94a3b8" }}>
+                      No hay boletos vendidos en este bus para el rango de fechas seleccionado.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Listado de Choferes */}
+      <div style={{ ...styles.chartSection, marginTop: 24 }}>
+        <h3 style={styles.sectionTitle}>👨‍✈️ Listado General de Choferes</h3>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1" }}>
+              <th style={{ textAlign: "left", padding: 8 }}>Nombre</th>
+              <th style={{ textAlign: "left", padding: 8 }}>C.I.</th>
+              <th style={{ textAlign: "left", padding: 8 }}>Teléfono</th>
+              <th style={{ textAlign: "center", padding: 8 }}>Edad</th>
+              <th style={{ textAlign: "left", padding: 8 }}>Licencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {datos.choferesList && datos.choferesList.length > 0 ? (
+              datos.choferesList.map((ch) => (
+                <tr key={ch.ci} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: 8, fontWeight: "bold" }}>{ch.nombre}</td>
+                  <td style={{ padding: 8 }}>{ch.ci}</td>
+                  <td style={{ padding: 8 }}>{ch.telefono || "N/A"}</td>
+                  <td style={{ padding: 8, textAlign: "center" }}>{ch.edad}</td>
+                  <td style={{ padding: 8 }}>{ch.licencia || "Categoría C"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ padding: 12, textAlign: "center", color: "#94a3b8" }}>
+                  No hay choferes registrados o no se tienen permisos para verlos.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 3. Listado de Clientes */}
+      <div style={{ ...styles.chartSection, marginTop: 24 }}>
+        <h3 style={styles.sectionTitle}>👥 Registro General de Clientes</h3>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1" }}>
+              <th style={{ textAlign: "left", padding: 8 }}>Nombre Completo</th>
+              <th style={{ textAlign: "left", padding: 8 }}>Carnet de Identidad (C.I.)</th>
+              <th style={{ textAlign: "left", padding: 8 }}>Teléfono</th>
+              <th style={{ textAlign: "left", padding: 8 }}>Comentario</th>
+            </tr>
+          </thead>
+          <tbody>
+            {datos.clientesList && datos.clientesList.length > 0 ? (
+              datos.clientesList.slice(0, 30).map((c) => (
+                <tr key={c.ci} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: 8, fontWeight: "bold" }}>{c.nombre}</td>
+                  <td style={{ padding: 8 }}>{c.ci}</td>
+                  <td style={{ padding: 8 }}>{c.telefono || "N/A"}</td>
+                  <td style={{ padding: 8, color: "#64748b" }}>{c.comentario || "N/A"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" style={{ padding: 12, textAlign: "center", color: "#94a3b8" }}>
+                  No hay clientes registrados o no se tienen permisos para verlos.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

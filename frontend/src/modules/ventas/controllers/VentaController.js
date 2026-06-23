@@ -32,7 +32,8 @@ export const useVentaController = () => {
     destino: "",
     fecha_viaje: "",
     hora_salida: "",
-    nro_asiento: ""
+    nro_asiento: "",
+    requiere_factura: false
   });
 
   // Datos del ticket activo
@@ -84,7 +85,8 @@ export const useVentaController = () => {
         ...formData,
         id_tipo: parseInt(formData.id_tipo),
         ci_pasajero: parseInt(formData.ci_pasajero),
-        telefono_pasajero: formData.telefono_pasajero ? parseInt(formData.telefono_pasajero) : null
+        telefono_pasajero: formData.telefono_pasajero ? parseInt(formData.telefono_pasajero) : null,
+        requiere_factura: formData.requiere_factura
       });
 
       const tipoPasajeroTexto = tipos.find(t => String(t.id_tipo) === String(formData.id_tipo))?.nombre_tipo || "Normal";
@@ -103,7 +105,8 @@ export const useVentaController = () => {
         hora: formData.hora_salida,
         origen: formData.origen,
         destino: formData.destino,
-        ref_transaccion: refGenerada
+        ref_transaccion: refGenerada,
+        nro_factura: res.data.nro_factura
       });
 
       if (formData.telefono_pasajero) {
@@ -119,7 +122,8 @@ export const useVentaController = () => {
         destino: "",
         fecha_viaje: "",
         hora_salida: "",
-        nro_asiento: ""
+        nro_asiento: "",
+        requiere_factura: false
       });
       setFecha("");
       setViajes([]);

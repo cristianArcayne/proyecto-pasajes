@@ -106,7 +106,7 @@ const RegistroEncomiendaUI = ({ onSaved }) => {
               />
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Viaje Asignado (Bus) *</label>
+              <label style={styles.label}>Destino del Viaje (Horario) *</label>
               <select
                 value={form.id_viaje}
                 onChange={(e) => setForm({ ...form, id_viaje: e.target.value })}
@@ -116,7 +116,7 @@ const RegistroEncomiendaUI = ({ onSaved }) => {
                 <option value="">-- Selecciona un Viaje --</option>
                 {viajes.map((v) => (
                   <option key={v.id_viaje} value={v.id_viaje}>
-                    {v.fecha} - {v.hora} ({v.placa}) - Ruta: {v.id_ruta}
+                    {v.origen} ➔ {v.destino} (Salida: {v.fecha} - {v.hora})
                   </option>
                 ))}
               </select>

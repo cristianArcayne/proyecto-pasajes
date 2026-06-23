@@ -10,20 +10,47 @@ export const useReportesController = () => {
   });
   
   const [datos, setDatos] = useState(new DatosConsolidados({}));
+  const [pasajesList, setPasajesList] = useState([]);
 
   const generarReporte = useCallback(async () => {
     setCargando(true);
     try {
-      // 1. Fetch relevant databases for aggregation
-      const [resPasajes, resEncomiendas, resViajes] = await Promise.all([
-        api.get("pasajes/"),
-        api.get("encomiendas/"),
-        api.get("viajes-admin/"),
+      // 1. Fetch relevant databases for aggregation with individual error catching to prevent 403 breakdowns
+      const [resPasajes, resEncomiendas, resViajes, resBuses, resChoferes, resClientes] = await Promise.all([
+        api.get("pasajes/").catch(err => {
+          console.warn("Sin permisos o error al cargar pasajes:", err);
+          return { data: [] };
+        }),
+        api.get("encomiendas/").catch(err => {
+          console.warn("Sin permisos o error al cargar encomiendas:", err);
+          return { data: [] };
+        }),
+        api.get("viajes-admin/").catch(err => {
+          console.warn("Sin permisos o error al cargar viajes:", err);
+          return { data: [] };
+        }),
+        api.get("flotas/").catch(err => {
+          console.warn("Sin permisos o error al cargar flotas:", err);
+          return { data: [] };
+        }),
+        api.get("choferes/").catch(err => {
+          console.warn("Sin permisos o error al cargar choferes:", err);
+          return { data: [] };
+        }),
+        api.get("clientes/").catch(err => {
+          console.warn("Sin permisos o error al cargar clientes:", err);
+          return { data: [] };
+        }),
       ]);
 
-      const pasajes = resPasajes.data;
-      const encomiendas = resEncomiendas.data;
-      const viajes = resViajes.data;
+      const pasajes = resPasajes.data || [];
+      const encomiendas = resEncomiendas.data || [];
+      const viajes = resViajes.data || [];
+      const buses = resBuses.data || [];
+      const choferes = resChoferes.data || [];
+      const clientes = resClientes.data || [];
+
+      setPasajesList(pasajes);
 
       // 2. Filter by date if specified
       let pasajesFiltrados = pasajes;
@@ -32,7 +59,6 @@ export const useReportesController = () => {
       if (filtros.fechaInicio) {
         const inicio = new Date(filtros.fechaInicio);
         pasajesFiltrados = pasajesFiltrados.filter(p => p.fecha_viaje ? new Date(p.fecha_viaje) >= inicio : true);
-        // Note: For encomiendas, we can try to filter by travel date if travel info is loaded
         encomiendasFiltradas = encomiendasFiltradas.filter(e => {
           const v = viajes.find(x => x.id_viaje === e.id_viaje);
           return v ? new Date(v.fecha) >= inicio : true;
@@ -88,6 +114,27 @@ export const useReportesController = () => {
         }
       });
 
+      // Fleet Statistics
+      const totalBuses = buses.length;
+      const busesActivos = buses.filter(b => b.id_estado === 1 || String(b.id_estado) === "1").length;
+
+      // Frequent Passengers
+      const pasajeroFrecuencias = {};
+      pasajesFiltrados.forEach(p => {
+        if (p.ci_pasajero) {
+          const key = `${p.nombre_pasajero} (CI: ${p.ci_pasajero})`;
+          pasajeroFrecuencias[key] = (pasajeroFrecuencias[key] || 0) + 1;
+        }
+      });
+      let pasajeroMasFrecuente = "N/A";
+      let maxPasajes = 0;
+      Object.entries(pasajeroFrecuencias).forEach(([pasajero, count]) => {
+        if (count > maxPasajes) {
+          maxPasajes = count;
+          pasajeroMasFrecuente = `${pasajero} (${count} boletos)`;
+        }
+      });
+
       // 4. Update state with domain class instance
       setDatos(new DatosConsolidados({
         totalPasajesVendidos: totalPasajes,
@@ -96,11 +143,18 @@ export const useReportesController = () => {
         ingresosEncomiendas: ingresosEncomiendas,
         rutaMasFrecuentada: rutaMasPopular,
         busMasUtilizado: busMasFrecuente,
+        totalBuses: totalBuses,
+        busesActivos: busesActivos,
+        pasajeroFrecuente: pasajeroMasFrecuente,
+        clientesList: clientes,
+        choferesList: choferes,
+        viajesList: viajes,
+        busesList: buses
       }));
 
     } catch (err) {
       console.error("Error al consolidar estadísticas:", err);
-      alert("No se pudieron consolidar las estadísticas. Verifica tu conexión con la base de datos.");
+      alert("No se pudieron consolidar las estadísticas.");
     } finally {
       setCargando(false);
     }
@@ -112,5 +166,6 @@ export const useReportesController = () => {
     setFiltros,
     datos,
     generarReporte,
+    pasajesList,
   };
 };

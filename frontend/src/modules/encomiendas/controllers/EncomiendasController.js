@@ -100,8 +100,7 @@ export const useEncomiendasController = () => {
         descripcion_carga: form.descripcion_carga,
         ci_remitente: parseInt(form.ci_remitente),
         id_viaje: parseInt(form.id_viaje),
-        // Los campos id_encomienda e id_detalle_venta los enviamos nulos o por defecto si no son obligatorios en base de datos
-        id_encomienda: null,
+        id_encomienda: parseInt(form.tipo_encomienda_id),
         id_detalle_venta: null,
       };
 
