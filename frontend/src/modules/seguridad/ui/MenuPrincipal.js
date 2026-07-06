@@ -13,6 +13,7 @@ import PanelRutasUI from "../../logistica/ui/PanelRutasUI";
 import PanelVentasUI from "../../ventas/ui/PanelVentasUI";
 import PanelEncomiendasUI from "../../encomiendas/ui/PanelEncomiendasUI";
 import PanelReportesUI from "../../reportes/ui/PanelReportesUI";
+import PanelAsistenteIAUI from "../../asistente_ia/ui/PanelAsistenteIAUI";
 
 const MenuPrincipal = () => {
   const { user, logout, tienePermiso, modulo, setModulo } = useSesionController();
@@ -92,6 +93,7 @@ const MenuPrincipal = () => {
 
           <div style={styles.sideTitle}>SISTEMA</div>
           {(user?.rol === "superusuario" || tienePermiso("reportes", "ver")) && navItem("reportes", "📊 Reportes")}
+          {navItem("asistente_ia", "Asistente Virtual IA")}
           {user?.rol === "superusuario" && navItem("gestion_usuarios", "⚙️ Gestión Usuarios")}
           {(user?.rol === "superusuario" || tienePermiso("bitacora", "ver")) &&
             navItem("bitacora", "📜 Bitácora")}
@@ -120,6 +122,7 @@ const MenuPrincipal = () => {
           {modulo === "ventas" && <PanelVentasUI />}
           {modulo === "encomiendas" && <PanelEncomiendasUI />}
           {modulo === "reportes" && <PanelReportesUI />}
+          {modulo === "asistente_ia" && <PanelAsistenteIAUI />}
           {modulo === "password" && <SeccionCuenta />}
         </main>
       </div>

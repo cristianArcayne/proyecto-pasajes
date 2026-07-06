@@ -32,6 +32,8 @@ class PerfilAdmin(models.Model):
     es_password_temporal = models.BooleanField(default=True)
     intentos_fallidos    = models.IntegerField(default=0)
     bloqueado            = models.BooleanField(default=False)
+    bloqueado_hasta      = models.DateTimeField(blank=True, null=True)
+    nivel_bloqueo        = models.PositiveIntegerField(default=0)
     token_recuperacion   = models.CharField(max_length=100, blank=True, null=True)
     token_expira         = models.DateTimeField(blank=True, null=True)
     # Permisos granulares por módulo

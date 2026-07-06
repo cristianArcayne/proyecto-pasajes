@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLoginController } from "../controllers/LoginController";
 
 const CampoConError = ({ id, errores, children }) => (
@@ -9,6 +9,7 @@ const CampoConError = ({ id, errores, children }) => (
 );
 
 const FormularioLogin = ({ onFirstTimeLogin, onRecoveryClick }) => {
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const {
     usuario,
     setUsuario,
@@ -41,9 +42,10 @@ const FormularioLogin = ({ onFirstTimeLogin, onRecoveryClick }) => {
           </CampoConError>
 
           <CampoConError id="password" errores={errores}>
+            <div style={s.passwordContainer}>
             <input
               style={{ ...s.input, ...(errores.password ? s.inputError : {}) }}
-              type="password"
+              type={mostrarPassword ? "text" : "password"}
               placeholder="Contraseña"
               value={password}
               onChange={(e) => {
@@ -51,6 +53,11 @@ const FormularioLogin = ({ onFirstTimeLogin, onRecoveryClick }) => {
                 clearError("password");
               }}
             />
+            <button type="button" style={s.verPassword}
+              onClick={() => setMostrarPassword((visible) => !visible)}>
+              {mostrarPassword ? "Ocultar" : "Ver"}
+            </button>
+            </div>
           </CampoConError>
 
           {errores.global && <p style={s.errorCampo}>{errores.global}</p>}
@@ -84,6 +91,12 @@ const s = {
     boxSizing: "border-box",
   },
   inputError: { borderColor: "red" },
+  passwordContainer: { position: "relative", width: "100%" },
+  verPassword: {
+    position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)",
+    border: "none", background: "transparent", color: "#502bc0", cursor: "pointer",
+    fontSize: "12px", fontWeight: "bold",
+  },
   boton: {
     padding: "12px",
     backgroundColor: "#502bc0",

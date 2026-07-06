@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.ventas',
     'apps.encomiendas',
     'apps.reportes',
+    'apps.asistente_ia',
 ]
 
 MIDDLEWARE = [

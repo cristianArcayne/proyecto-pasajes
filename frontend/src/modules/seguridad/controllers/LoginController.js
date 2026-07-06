@@ -13,7 +13,6 @@ export const useLoginController = ({ onFirstTimeLogin, onRecoveryClick }) => {
   const [errores, setErrores] = useState({});
 
   // Bloqueo local por intentos fallidos
-  const [intentos, setIntentos] = useState(0);
   const [bloqueadoHasta, setBloqueadoHasta] = useState(null);
   const [tiempoRestante, setTiempoRestante] = useState(0);
 
@@ -58,8 +57,6 @@ export const useLoginController = ({ onFirstTimeLogin, onRecoveryClick }) => {
         password: password,
       });
 
-      setIntentos(0);
-
       if (res.data.es_password_temporal) {
         localStorage.setItem("admin_access", res.data.access);
         onFirstTimeLogin({
@@ -75,10 +72,8 @@ export const useLoginController = ({ onFirstTimeLogin, onRecoveryClick }) => {
         navigate("/panel-admin");
       }
     } catch (err) {
-      const nuevosIntentos = intentos + 1;
-      setIntentos(nuevosIntentos);
-      if (nuevosIntentos >= 3) {
-        const segundos = 30;
+      const segundos = Number(err.response?.data?.tiempo_restante || 0);
+      if (segundos > 0) {
         setBloqueadoHasta(Date.now() + segundos * 1000);
         setTiempoRestante(segundos);
       }

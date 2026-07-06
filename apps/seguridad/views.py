@@ -71,22 +71,46 @@ class LoginViewSet(viewsets.ViewSet):
 
         perfil, _ = PerfilAdmin.objects.get_or_create(usuario=user)
 
-        if perfil.bloqueado:
-            return Response({"mensaje": "Cuenta bloqueada. Recupera tu contraseña por correo."}, status=status.HTTP_403_FORBIDDEN)
+        ahora = timezone.now()
+        if perfil.bloqueado and perfil.bloqueado_hasta:
+            if ahora < perfil.bloqueado_hasta:
+                segundos = max(1, int((perfil.bloqueado_hasta - ahora).total_seconds()) + 1)
+                return Response({
+                    "mensaje": f"Cuenta bloqueada temporalmente. Intenta nuevamente en {segundos} segundos.",
+                    "tiempo_restante": segundos,
+                }, status=status.HTTP_403_FORBIDDEN)
+            perfil.bloqueado = False
+            perfil.bloqueado_hasta = None
+            perfil.save(update_fields=["bloqueado", "bloqueado_hasta"])
+        elif perfil.bloqueado:
+            # Libera bloqueos permanentes creados por versiones anteriores.
+            perfil.bloqueado = False
+            perfil.intentos_fallidos = 0
+            perfil.save(update_fields=["bloqueado", "intentos_fallidos"])
 
         user_auth = self.autenticarUsuario(username, password)
         if not user_auth:
             perfil.intentos_fallidos += 1
             if perfil.intentos_fallidos >= 3:
+                segundos_bloqueo = 15 * (2 ** perfil.nivel_bloqueo)
                 perfil.bloqueado = True
+                perfil.bloqueado_hasta = ahora + timedelta(seconds=segundos_bloqueo)
+                perfil.nivel_bloqueo += 1
+                perfil.intentos_fallidos = 0
                 perfil.save()
                 registrar_bitacora(username, 'login', 'auth', 'Cuenta bloqueada por 3 intentos fallidos', request)
-                return Response({"mensaje": "Cuenta bloqueada por 3 intentos fallidos."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({
+                    "mensaje": f"Cuenta bloqueada por {segundos_bloqueo} segundos.",
+                    "tiempo_restante": segundos_bloqueo,
+                }, status=status.HTTP_403_FORBIDDEN)
             perfil.save()
             restantes = 3 - perfil.intentos_fallidos
             return Response({"mensaje": f"Contraseña incorrecta. Te quedan {restantes} intentos."}, status=status.HTTP_401_UNAUTHORIZED)
 
         perfil.intentos_fallidos = 0
+        perfil.bloqueado = False
+        perfil.bloqueado_hasta = None
+        perfil.nivel_bloqueo = 0
         perfil.save()
         
         # Auditoría con BitacoraSesion
